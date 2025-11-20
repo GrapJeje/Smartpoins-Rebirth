@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Smartpoints Interface (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "Smartpoints Interface (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
