@@ -4,10 +4,12 @@ namespace smartpoints_api;
 
 public class AppDbContext : DbContext
 {
+    public DbSet<Point> Points { get; set; } = null!;
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         optionsBuilder.UseMySql(
-            "server=localhost;database=smartpoints_rebirth;port=3306;user=root;password=admin",
+            "server=localhost;database=smartpoints_rebirth;port=3306;user=root;password=",
             ServerVersion.Parse("8.0.30")
         );
     }

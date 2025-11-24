@@ -20,6 +20,8 @@ public class ApiServer
     private void RegisterRequests()
     {
         requests.Add(new TestRequest());
+        // Use the consolidated CRUD handler for points
+        requests.Add(new PointsRequest());
     }
 
     private void Start()
@@ -36,15 +38,38 @@ public class ApiServer
             var request = context.Request;
             var response = context.Response;
 
-            Console.WriteLine($"Received request for {request.Url}");
+            Console.WriteLine($"Received request for {request.Url?.ToString() ?? "(no url)"}");
 
             bool handled = false;
             foreach (var apiRequest in requests)
             {
                 if (apiRequest.GetUrl() == null) continue;
 
-                if (request.Url.AbsolutePath.TrimStart('/').Equals(apiRequest.GetUrl(), StringComparison.OrdinalIgnoreCase))
+                var urlPath = request.Url?.AbsolutePath?.TrimStart('/') ?? string.Empty;
+                if (urlPath.Equals(apiRequest.GetUrl(), StringComparison.OrdinalIgnoreCase)
+                    || urlPath.StartsWith(apiRequest.GetUrl() + "/", StringComparison.OrdinalIgnoreCase))
                 {
+                    try
+                    {
+                        if (apiRequest.Handle(context))
+                        {
+                            handled = true;
+                            break;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        string error = $"500 Internal Server Error: {ex.Message}";
+                        byte[] errorBuf = Encoding.UTF8.GetBytes(error);
+                        response.StatusCode = 500;
+                        response.ContentLength64 = errorBuf.Length;
+                        response.ContentType = "text/plain; charset=UTF-8";
+                        response.OutputStream.Write(errorBuf, 0, errorBuf.Length);
+                        response.OutputStream.Close();
+                        handled = true;
+                        break;
+                    }
+
                     string page = apiRequest.GetPage();
                     byte[] buffer = Encoding.UTF8.GetBytes(page);
                     response.ContentLength64 = buffer.Length;
