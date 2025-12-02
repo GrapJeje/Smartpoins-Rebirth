@@ -7,6 +7,8 @@ namespace smartpoints_api
     public class AppDbContext : DbContext
     {
         public DbSet<Point> Points { get; set; } = null!;
+        public DbSet<User> Users { get; set; }
+        public DbSet<Subjects> Subjects { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
