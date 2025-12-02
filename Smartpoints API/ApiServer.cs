@@ -20,7 +20,6 @@ public class ApiServer
     private void RegisterRequests()
     {
         requests.Add(new TestRequest());
-        // Use the consolidated CRUD handler for points
         requests.Add(new PointsRequest());
     }
 

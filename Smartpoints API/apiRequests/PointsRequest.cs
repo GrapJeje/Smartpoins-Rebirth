@@ -1,18 +1,14 @@
 using System.Net;
 using System.Text;
 using System.Text.Json;
-using System.IO;
-using System.Linq;
-using smartpoints_api;
+using Smartpoints_Api.Models;
 
 namespace smartpoints_api.apiRequests;
 
-// Consolidated CRUD handler for /points and /points/{id}
 public class PointsRequest : APiRequest
 {
     public override string GetUrl() => "points";
-
-    // Legacy server fallback requires a non-null page; not used for API flows.
+    
     public override string GetPage() => string.Empty;
 
     public override bool Handle(HttpListenerContext context)
@@ -22,8 +18,7 @@ public class PointsRequest : APiRequest
 
         var path = request.Url?.AbsolutePath?.TrimStart('/') ?? string.Empty;
         if (!path.StartsWith(GetUrl(), StringComparison.OrdinalIgnoreCase)) return false;
-
-        // split into segments: "points" or "points/{id}"
+        
         var segments = path.Split('/', StringSplitOptions.RemoveEmptyEntries);
         int? id = null;
         if (segments.Length > 1 && int.TryParse(segments[1], out var parsed)) id = parsed;
@@ -130,8 +125,7 @@ public class PointsRequest : APiRequest
             WritePlain(response, "Not Found");
             return true;
         }
-
-        // Ensure the primary key matches the path id
+        
         updated.Id = id;
 
         db.Entry(existing).CurrentValues.SetValues(updated);
