@@ -2,7 +2,7 @@
 
 namespace Smartpoints_Api.Models;
 
-public class Subjects
+public class Subject
 {
     public int Id { get; set; }
 

@@ -8,7 +8,9 @@ namespace smartpoints_api
     {
         public DbSet<Point> Points { get; set; } = null!;
         public DbSet<User> Users { get; set; }
-        public DbSet<Subjects> Subjects { get; set; }
+        public DbSet<Subject> Subjects { get; set; }
+        public DbSet<Clazz> Clazzes { get; set; }
+        public DbSet<Test> Tests { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

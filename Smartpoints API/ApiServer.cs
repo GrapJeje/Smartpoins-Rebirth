@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Text;
+using Smartpoints_API;
 using smartpoints_api.apiRequests;
 using Smartpoints_API.apiRequests;
 
@@ -7,7 +8,7 @@ namespace smartpoints_api;
 
 public class ApiServer
 {
-    private readonly List<APiRequest> requests = new();
+    private readonly List<ApiRequest> requests = new();
     private readonly string prefix;
 
     public ApiServer(string prefix)
@@ -20,7 +21,7 @@ public class ApiServer
     private void RegisterRequests()
     {
         requests.Add(new TestRequest());
-        requests.Add(new PointsRequest());
+        requests.Add(new SessionRequest());
     }
 
     private void Start()
@@ -39,7 +40,7 @@ public class ApiServer
 
             Console.WriteLine($"Received request for {request.Url?.ToString() ?? "(no url)"}");
 
-            bool handled = false;
+            var handled = false;
             foreach (var apiRequest in requests)
             {
                 if (apiRequest.GetUrl() == null) continue;
@@ -50,11 +51,9 @@ public class ApiServer
                 {
                     try
                     {
-                        if (apiRequest.Handle(context))
-                        {
-                            handled = true;
-                            break;
-                        }
+                        apiRequest.Handle(context);
+                        handled = true;
+                        break;
                     }
                     catch (Exception ex)
                     {
@@ -68,15 +67,6 @@ public class ApiServer
                         handled = true;
                         break;
                     }
-
-                    string page = apiRequest.GetPage();
-                    byte[] buffer = Encoding.UTF8.GetBytes(page);
-                    response.ContentLength64 = buffer.Length;
-                    response.ContentType = "text/html; charset=UTF-8";
-                    response.OutputStream.Write(buffer, 0, buffer.Length);
-                    response.OutputStream.Close();
-                    handled = true;
-                    break;
                 }
             }
 

@@ -20,5 +20,5 @@ public class Test
     [Required(ErrorMessage = "Vak is verplicht.")]
     public int SubjectId { get; set; }
     
-    public Subjects Subject { get; set; }
+    public Subject Subject { get; set; }
 }

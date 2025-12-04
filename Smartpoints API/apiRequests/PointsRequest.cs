@@ -1,17 +1,18 @@
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using Smartpoints_API;
 using Smartpoints_Api.Models;
 
 namespace smartpoints_api.apiRequests;
 
-public class PointsRequest : APiRequest
+public class PointsRequest
 {
-    public override string GetUrl() => "points";
+    public string GetUrl() => "points";
     
-    public override string GetPage() => string.Empty;
+    public string GetPage() => string.Empty;
 
-    public override bool Handle(HttpListenerContext context)
+    public bool Handle(HttpListenerContext context)
     {
         var request = context.Request;
         var response = context.Response;

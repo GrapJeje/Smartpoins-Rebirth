@@ -1,6 +1,4 @@
-﻿using smartpoints_api.apiRequests;
-
-namespace smartpoints_api;
+﻿namespace smartpoints_api;
 
 internal class Program
 {

@@ -1,16 +1,22 @@
-﻿using smartpoints_api.apiRequests;
+﻿namespace Smartpoints_API.apiRequests;
 
-namespace Smartpoints_API.apiRequests;
-
-public class TestRequest : APiRequest
+public class TestRequest : ApiRequest
 {
-    public override string GetUrl()
+    public override string GetUrl() => "test";
+
+    protected override void GetRequests()
     {
-        return "test";
+        RegisterHandler(RequestType.GET, GetRequest);
     }
 
-    public override string GetPage()
+    public (string url, Action<Dictionary<string,string>> handler) GetRequest()
     {
-        return "kaas";
+        Action<Dictionary<string,string>> logic = (parameters) =>
+        {
+            string id = parameters["id"];
+            WritePlain($"You requested test with id = {id}");
+        };
+
+        return (GetUrl() + "/{id}", logic);
     }
 }
