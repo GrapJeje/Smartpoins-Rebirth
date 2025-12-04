@@ -5,12 +5,20 @@ namespace Smartpoints_Api.Models;
 public class User
 {
     public int Id { get; set; }
+
     [Required(ErrorMessage = "Naam is verplicht.")]
+    [StringLength(100, ErrorMessage = "Naam mag maximaal 100 tekens bevatten.")]
     public string Name { get; set; }
+
     [Required(ErrorMessage = "Email is verplicht.")]
     [EmailAddress(ErrorMessage = "Voer een geldig e-mailadres in.")]
-    public string email { get; set; }
+    [StringLength(150, ErrorMessage = "E-mail mag maximaal 150 tekens bevatten.")]
+    public string Email { get; set; }
+
     [Required(ErrorMessage = "Wachtwoord is verplicht.")]
-    public string password { get; set; }
-    public int class_id { get; set; }
+    [StringLength(255, ErrorMessage = "Wachtwoord mag maximaal 255 tekens bevatten.")]
+    public string Password { get; set; }
+
+    [Required(ErrorMessage = "Klas is verplicht.")]
+    public int ClassId { get; set; }
 }
