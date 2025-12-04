@@ -21,4 +21,11 @@ public class User
 
     [Required(ErrorMessage = "Klas is verplicht.")]
     public int ClassId { get; set; }
+    public Clazz Class { get; set; }
+
+    [Required(ErrorMessage = "Rol is verplicht.")]
+    public Role Role { get; set; } = Role.STUDENT;
+    
+    [StringLength(255, ErrorMessage = "Session token mag maximaal 255 tekens bevatten.")]
+    public string SessionToken { get; set; }
 }
