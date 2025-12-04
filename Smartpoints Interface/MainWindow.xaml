@@ -14,6 +14,20 @@
     </Window.SystemBackdrop>
 
     <Grid>
-
+        <SelectorBar x:Name="contentSelectorBar"
+               Grid.Column="0"
+               SelectionChanged="contentSelectorBar_SelectionChanged">
+            <SelectorBarItem x:Name="studentSelectorBarItem"
+                      Text="Student"
+                      Icon="Contact"/>
+            <SelectorBarItem x:Name="teacherSelectorBarItem"
+                        Text="Teacher"
+                        Icon="Contact2"/>
+            <SelectorBarItem x:Name="adminSelectorBarItem"
+                        Text="Admin"
+                        Icon="ContactInfo"/>
+        </SelectorBar>
+        <Frame x:Name="contentFrame"
+           Grid.Column="1"/>
     </Grid>
 </Window>
