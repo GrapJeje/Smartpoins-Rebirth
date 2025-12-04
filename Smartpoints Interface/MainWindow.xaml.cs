@@ -27,5 +27,23 @@ namespace Smartpoints_Interface
         {
             InitializeComponent();
         }
+        private void contentSelectorBar_SelectionChanged(global::Microsoft.UI.Xaml.Controls.SelectorBar sender,global::Microsoft.UI.Xaml.Controls.SelectorBarSelectionChangedEventArgs args)
+        {
+            SelectorBarItem selectedItem = sender.SelectedItem;
+
+            if (selectedItem == studentSelectorBarItem)
+            {
+                contentFrame.Navigate(typeof(student));
+            }
+            else if (selectedItem == teacherSelectorBarItem)
+            {
+                contentFrame.Navigate(typeof(teacher));
+            }
+            else if (selectedItem == adminSelectorBarItem)
+            {
+                contentFrame.Navigate(typeof(admin));
+            }
+
+        }
     }
 }
