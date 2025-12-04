@@ -18,7 +18,10 @@ public class User
     [Required(ErrorMessage = "Wachtwoord is verplicht.")]
     [StringLength(255, ErrorMessage = "Wachtwoord mag maximaal 255 tekens bevatten.")]
     public string Password { get; set; }
-
-    [Required(ErrorMessage = "Klas is verplicht.")]
+    
     public int ClassId { get; set; }
+    public Clazz Class { get; set; }
+    
+    [Required(ErrorMessage = "Rol is verplicht.")]
+    public Role Role { get; set; } = Role.STUDENT;
 }
