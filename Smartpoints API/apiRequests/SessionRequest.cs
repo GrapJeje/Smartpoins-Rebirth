@@ -4,7 +4,7 @@ namespace Smartpoints_API.apiRequests;
 
 public class SessionRequest : ApiRequest
 {
-    public override string GetUrl() => "session";
+    public override string GetUrl() => "sessions";
 
     protected override void GetRequests()
     {
