@@ -71,7 +71,6 @@ public class SubjectRequest : ApiRequest
         Action<Dictionary<string,string>> logic = (_) =>
         {
             var body = ReadJson<SubjectCreateDto>();
-            Console.WriteLine(body == null ? "body is null" : $"name={body.name}");
 
             if (body == null || string.IsNullOrWhiteSpace(body.name))
             {
