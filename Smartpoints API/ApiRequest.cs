@@ -7,7 +7,7 @@ namespace Smartpoints_API;
 
 public abstract class ApiRequest
 {
-    private Dictionary<string, Request> requests = [];
+    private Dictionary<(RequestType type, string url), Request> requests = new();
 
     protected virtual string AuthCode => Environment.GetEnvironmentVariable("AUTH_CODE") ?? "";
 
@@ -44,9 +44,11 @@ public abstract class ApiRequest
         var found = false;
         foreach (var req in requests.Values)
         {
+            if (req.type != (RequestType)Enum.Parse(typeof(RequestType), request.HttpMethod, true))
+                continue;
+
             if (!req.TryMatch(path, out var parameters)) continue;
             req.methode(parameters);
-            response.StatusCode = 200;
             found = true;
             break;
         }
@@ -84,7 +86,35 @@ public abstract class ApiRequest
     {
         var (url, handler) = methode();
         var request = new Request(type, url, handler);
-        requests.Add(url, request);
+        requests.Add((type, url), request);
+    }
+    
+    protected T? ReadJson<T>()
+    {
+        try
+        {
+            if (!request.InputStream.CanSeek)
+            {
+                using var reader = new StreamReader(request.InputStream, Encoding.UTF8);
+                var body = reader.ReadToEnd();
+                if (string.IsNullOrWhiteSpace(body)) return default;
+
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                return JsonSerializer.Deserialize<T>(body, options);
+            }
+
+            request.InputStream.Position = 0;
+            using var readerSeekable = new StreamReader(request.InputStream, Encoding.UTF8, leaveOpen: true);
+            var bodySeekable = readerSeekable.ReadToEnd();
+            if (string.IsNullOrWhiteSpace(bodySeekable)) return default;
+
+            var optionsSeekable = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            return JsonSerializer.Deserialize<T>(bodySeekable, optionsSeekable);
+        }
+        catch
+        {
+            return default;
+        }
     }
 
 

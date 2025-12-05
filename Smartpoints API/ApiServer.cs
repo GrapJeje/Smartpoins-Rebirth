@@ -20,6 +20,7 @@ public class ApiServer
     private void RegisterRequests()
     {
         requests.Add(new SessionRequest());
+        requests.Add(new SubjectRequest());
     }
 
     private void Start()
