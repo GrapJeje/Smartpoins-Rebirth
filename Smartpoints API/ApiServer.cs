@@ -1,7 +1,6 @@
 ﻿using System.Net;
 using System.Text;
 using Smartpoints_API;
-using smartpoints_api.apiRequests;
 using Smartpoints_API.apiRequests;
 
 namespace smartpoints_api;
@@ -20,7 +19,6 @@ public class ApiServer
 
     private void RegisterRequests()
     {
-        requests.Add(new TestRequest());
         requests.Add(new SessionRequest());
     }
 
@@ -34,51 +32,77 @@ public class ApiServer
 
         while (true)
         {
-            var context = listener.GetContext();
-            var request = context.Request;
-            var response = context.Response;
-
-            Console.WriteLine($"Received request for {request.Url?.ToString() ?? "(no url)"}");
-
-            var handled = false;
-            foreach (var apiRequest in requests)
+            HttpListenerContext? context = null;
+            try
             {
-                if (apiRequest.GetUrl() == null) continue;
+                context = listener.GetContext();
+                var request = context.Request;
+                var response = context.Response;
 
-                var urlPath = request.Url?.AbsolutePath?.TrimStart('/') ?? string.Empty;
-                if (urlPath.Equals(apiRequest.GetUrl(), StringComparison.OrdinalIgnoreCase)
-                    || urlPath.StartsWith(apiRequest.GetUrl() + "/", StringComparison.OrdinalIgnoreCase))
+                Console.WriteLine($"Received request for {request.Url?.ToString() ?? "(no url)"}");
+
+                var handled = false;
+
+                foreach (var apiRequest in requests)
                 {
+                    var baseUrl = apiRequest.GetUrl();
+                    if (baseUrl == null) continue;
+
+                    var urlPath = request.Url?.AbsolutePath?.TrimStart('/') ?? string.Empty;
+
+                    if (!urlPath.Equals(baseUrl, StringComparison.OrdinalIgnoreCase)
+                        && !urlPath.StartsWith(baseUrl + "/", StringComparison.OrdinalIgnoreCase)) continue;
                     try
                     {
                         apiRequest.Handle(context);
-                        handled = true;
-                        break;
                     }
                     catch (Exception ex)
                     {
-                        string error = $"500 Internal Server Error: {ex.Message}";
-                        byte[] errorBuf = Encoding.UTF8.GetBytes(error);
-                        response.StatusCode = 500;
-                        response.ContentLength64 = errorBuf.Length;
-                        response.ContentType = "text/plain; charset=UTF-8";
-                        response.OutputStream.Write(errorBuf, 0, errorBuf.Length);
-                        response.OutputStream.Close();
-                        handled = true;
-                        break;
+                        WriteSafeError(response, $"500 Internal Server Error: {ex.Message}");
                     }
+
+                    handled = true;
+                    break;
+                }
+
+                if (!handled) WriteSafeError(response, "404 Not Found", 404);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"🔥 Server exception (but continuing): {ex}");
+
+                if (context != null)
+                {
+                    try
+                    {
+                        WriteSafeError(context.Response, "500 Internal Server Error (global catch)");
+                    }
+                    catch { /* ignore */ }
                 }
             }
-
-            if (!handled)
+        }
+    }
+    
+    private void WriteSafeError(HttpListenerResponse response, string message, int statusCode = 500)
+    {
+        try
+        {
+            if (response.OutputStream.CanWrite)
             {
-                string notFound = "404 Not Found";
-                byte[] buffer = Encoding.UTF8.GetBytes(notFound);
+                byte[] buffer = Encoding.UTF8.GetBytes(message);
+                response.StatusCode = statusCode;
+                response.ContentType = "text/plain; charset=UTF-8";
                 response.ContentLength64 = buffer.Length;
-                response.ContentType = "text/html; charset=UTF-8";
                 response.OutputStream.Write(buffer, 0, buffer.Length);
-                response.OutputStream.Close();
             }
+        }
+        catch
+        {
+            // Ignore
+        }
+        finally
+        {
+            try { response.OutputStream.Close(); } catch { }
         }
     }
 }

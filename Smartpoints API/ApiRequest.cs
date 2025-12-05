@@ -9,6 +9,8 @@ public abstract class ApiRequest
 {
     private Dictionary<string, Request> requests = [];
 
+    protected virtual string AuthCode => Environment.GetEnvironmentVariable("AUTH_CODE") ?? "";
+
     protected HttpListenerRequest request;
     protected HttpListenerResponse response;
     
@@ -25,6 +27,16 @@ public abstract class ApiRequest
     {
         request = context.Request;
         response = context.Response;
+        
+        var queryString = request.Url.Query;
+        var codeMatch = Regex.Match(queryString, @"[?&]code=([^&]*)");
+        
+        if (!codeMatch.Success || codeMatch.Groups[1].Value != AuthCode)
+        {
+            response.StatusCode = 401;
+            WritePlain("Unauthorized: Invalid or missing code parameter");
+            return;
+        }
 
         var path = request.Url.AbsolutePath;
         if (path.StartsWith("/")) path = path.Substring(1);
@@ -43,8 +55,6 @@ public abstract class ApiRequest
             response.StatusCode = 404;
             WritePlain("Not Found");
         }
-
-        response.OutputStream.Close();
     }
     
     protected void WriteJson(object obj)
@@ -54,7 +64,6 @@ public abstract class ApiRequest
         response.ContentType = "application/json; charset=UTF-8";
         response.ContentLength64 = buffer.Length;
         response.OutputStream.Write(buffer, 0, buffer.Length);
-        response.OutputStream.Close();
     }
     
     protected void WritePlain(string text)
@@ -63,7 +72,6 @@ public abstract class ApiRequest
         response.ContentType = "text/plain; charset=UTF-8";
         response.ContentLength64 = buffer.Length;
         response.OutputStream.Write(buffer, 0, buffer.Length);
-        response.OutputStream.Close();
     }
 
     protected void sendResponse(int statusCode, string message)
