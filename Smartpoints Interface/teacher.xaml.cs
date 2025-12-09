@@ -1,31 +1,107 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
+using System.Collections.ObjectModel;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-
-// To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
 
 namespace Smartpoints_Interface
 {
-    /// <summary>
-    /// An empty page that can be used on its own or navigated to within a Frame.
-    /// </summary>
     public sealed partial class teacher : Page
     {
+        private ObservableCollection<double> Grades { get; } = new();
+        private ObservableCollection<SubjectModel> Subjects { get; } = new();
+
         public teacher()
         {
             InitializeComponent();
+            GradesListView.ItemsSource = Grades;
+            SubjectComboBox.ItemsSource = Subjects;
+            PopulateSubjectsFromStudentXaml();
+            UpdateAverage();
+        }
+
+        private void PopulateSubjectsFromStudentXaml()
+        {
+            Subjects.Clear();
+            Subjects.Add(new SubjectModel { Id = 0, Code = "PRA", Name = "Praktijk" });
+            Subjects.Add(new SubjectModel { Id = 1, Code = "PRO", Name = "Praktijk ondersteuning" });
+            Subjects.Add(new SubjectModel { Id = 2, Code = "NAT", Name = "Native" });
+            Subjects.Add(new SubjectModel { Id = 3, Code = "WEB", Name = "Web" });
+            Subjects.Add(new SubjectModel { Id = 4, Code = "NED", Name = "Nederlands" });
+            Subjects.Add(new SubjectModel { Id = 5, Code = "ENG", Name = "Engels" });
+            Subjects.Add(new SubjectModel { Id = 6, Code = "MENTOR", Name = "Mentoruur" });
+            Subjects.Add(new SubjectModel { Id = 7, Code = "SOFTSK", Name = "Soft Skills" });
+
+            SubjectComboBox.DisplayMemberPath = "Display";
+        }
+
+        private void AddGrade_Click(object sender, RoutedEventArgs e)
+        {
+            var value = NewGradeNumberBox.Value;
+            if (value < NewGradeNumberBox.Minimum || value > NewGradeNumberBox.Maximum) return;
+            Grades.Add(value);
+            UpdateAverage();
+        }
+
+        private void RemoveGrade_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.DataContext is double item)
+            {
+                Grades.Remove(item);
+                UpdateAverage();
+            }
+        }
+
+        private void ClearGradesButton_Click(object sender, RoutedEventArgs e)
+        {
+            Grades.Clear();
+            UpdateAverage();
+        }
+
+        private void UpdateAverage()
+        {
+            if (Grades.Count == 0)
+            {
+                AverageTextBox.Text = string.Empty;
+                return;
+            }
+
+            var avg = Grades.Average();
+            AverageTextBox.Text = avg.ToString("0.##");
+        }
+
+        private void SubmitButton_Click(object sender, RoutedEventArgs e)
+        {
+            var studentName = StudentNameTextBox.Text?.Trim() ?? string.Empty;
+            var code = CodeTextBox.Text?.Trim() ?? string.Empty;
+            var week = (int)WeekNumberBox.Value;
+            var title = TitleTextBox.Text?.Trim() ?? string.Empty;
+            var grades = Grades.ToArray();
+            var average = grades.Length > 0 ? grades.Average() : (double?)null;
+            var subject = SubjectComboBox.SelectedItem as SubjectModel;
+
+            System.Diagnostics.Debug.WriteLine($"[Teacher] Code:{code} Student:{studentName} Week:{week} Title:{title} Subject:{subject?.Code} Avg:{average}");
+            // TODO: stuur naar API (use HttpClient) of sla lokaal op
+        }
+
+        private void ClearButton_Click(object sender, RoutedEventArgs e)
+        {
+            StudentNameTextBox.Text = string.Empty;
+            CodeTextBox.Text = string.Empty;
+            WeekNumberBox.Value = WeekNumberBox.Minimum;
+            TitleTextBox.Text = string.Empty;
+            Grades.Clear();
+            SubjectComboBox.SelectedIndex = -1;
+            UpdateAverage();
+        }
+
+        private class SubjectModel
+        {
+            public int Id { get; set; }
+            public string Code { get; set; } = string.Empty;
+            public string Name { get; set; } = string.Empty;
+            public string Display => string.IsNullOrEmpty(Name) ? Code : $"{Code} - {Name}";
+            public override string ToString() => Display;
         }
     }
 }
