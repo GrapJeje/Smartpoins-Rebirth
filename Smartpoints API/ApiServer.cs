@@ -24,6 +24,7 @@ public class ApiServer
         requests.Add(new ClazzRequest());
         requests.Add(new PointRequest());
         requests.Add(new UserRequest());
+        requests.Add(new TestRequest());
     }
 
     private void Start()
