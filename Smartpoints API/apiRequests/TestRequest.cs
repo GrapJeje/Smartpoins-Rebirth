@@ -9,6 +9,7 @@ public class TestRequest : ApiRequest
     protected override void GetRequests()
     {
         RegisterHandler(RequestType.GET, GetTest);
+        RegisterHandler(RequestType.GET, GetAllTests);
     }
     
     public (string url, Action<Dictionary<string,string>> handler) GetTest()
@@ -40,5 +41,28 @@ public class TestRequest : ApiRequest
         };
 
         return ($"{GetUrl()}/{{id}}", logic);
+    }
+    
+    public (string url, Action<Dictionary<string,string>> handler) GetAllTests()
+    {
+        Action<Dictionary<string,string>> logic = (_) =>
+        {
+            using var db = new AppDbContext();
+
+            var points = db.Tests
+                .Select(p => new {
+                    p.Id,
+                    p.Code,
+                    p.Week,
+                    p.Title,
+                    p.SubjectId
+                })
+                .ToList();
+
+            WriteJson(points);
+            sendResponse(200, "OK");
+        };
+
+        return (GetUrl(), logic);
     }
 }
