@@ -15,7 +15,7 @@ namespace Smartpoints_Interface
 {
     public sealed partial class student : Page
     {
-        private const string BaseUrl = "http://localhost:5000/";
+        private const string BaseUrl = "http://localhost:8080";
         private readonly HttpClient _httpClient;
         private int _currentUserId = 1;
 
