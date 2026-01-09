@@ -59,15 +59,15 @@ namespace Smartpoints_Interface
         {
             try
             {
-                var userResponse = await _httpClient.GetAsync($"{BaseUrl}/users/{_currentUserId}");
+                var userResponse = await _httpClient.GetAsync($"{BaseUrl}/users/{_currentUserId}" + getCode());
                 if (!userResponse.IsSuccessStatusCode)
                 {
-                    var classResponse = await _httpClient.GetAsync($"{BaseUrl}/classes/1");
+                    var classResponse = await _httpClient.GetAsync($"{BaseUrl}/classes/1" + getCode());
                     if (!classResponse.IsSuccessStatusCode)
                     {
                         var classData = new { name = "Test Klas" };
                         var classContent = new StringContent(JsonSerializer.Serialize(classData), Encoding.UTF8, "application/json");
-                        await _httpClient.PostAsync($"{BaseUrl}/classes", classContent);
+                        await _httpClient.PostAsync($"{BaseUrl}/classes" + getCode(), classContent);
                     }
                     
                     var userData = new
@@ -79,7 +79,7 @@ namespace Smartpoints_Interface
                         role = "STUDENT"
                     };
                     var userContent = new StringContent(JsonSerializer.Serialize(userData), Encoding.UTF8, "application/json");
-                    await _httpClient.PostAsync($"{BaseUrl}/users", userContent);
+                    await _httpClient.PostAsync($"{BaseUrl}/users" + getCode(), userContent);
                 }
             }
             catch
@@ -92,7 +92,7 @@ namespace Smartpoints_Interface
         {
             try
             {
-                var response = await _httpClient.GetAsync($"{BaseUrl}/users/{_currentUserId}");
+                var response = await _httpClient.GetAsync($"{BaseUrl}/users/{_currentUserId}" + getCode());
                 if (response.IsSuccessStatusCode)
                 {
                     var json = await response.Content.ReadAsStringAsync();
@@ -140,8 +140,8 @@ namespace Smartpoints_Interface
         {
             try
             {
-                var testsResponse = await _httpClient.GetAsync($"{BaseUrl}/tests");
-                var pointsResponse = await _httpClient.GetAsync($"{BaseUrl}/points");
+                var testsResponse = await _httpClient.GetAsync($"{BaseUrl}/tests" + getCode());
+                var pointsResponse = await _httpClient.GetAsync($"{BaseUrl}/points" + getCode());
 
                 if (testsResponse.IsSuccessStatusCode && pointsResponse.IsSuccessStatusCode)
                 {
@@ -333,6 +333,12 @@ namespace Smartpoints_Interface
             if (grade >= 5.5) return Windows.UI.Color.FromArgb(255, 0, 128, 0); // Groen
             if (grade >= 4.5) return Windows.UI.Color.FromArgb(255, 255, 165, 0); // Oranje
             return Windows.UI.Color.FromArgb(255, 255, 0, 0); // Rood
+        }
+
+        private String getCode()
+        {
+            var code = Environment.GetEnvironmentVariable("AUTH_CODE") ?? "123";
+            return "?code=" + code;
         }
     }
     
