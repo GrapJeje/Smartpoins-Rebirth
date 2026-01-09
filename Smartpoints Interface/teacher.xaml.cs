@@ -1,6 +1,10 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Text;
+using System.Text.Json;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
@@ -10,10 +14,14 @@ namespace Smartpoints_Interface
     {
         private ObservableCollection<double> Grades { get; } = new();
         private ObservableCollection<SubjectModel> Subjects { get; } = new();
+        
+        private const string BaseUrl = "http://localhost:8080";
+        private readonly HttpClient _httpClient;
 
         public teacher()
         {
             InitializeComponent();
+            _httpClient = new HttpClient();
             GradesListView.ItemsSource = Grades;
             SubjectComboBox.ItemsSource = Subjects;
             PopulateSubjectsFromStudentXaml();
@@ -70,18 +78,94 @@ namespace Smartpoints_Interface
             AverageTextBox.Text = avg.ToString("0.##");
         }
 
-        private void SubmitButton_Click(object sender, RoutedEventArgs e)
+        private async void SubmitButton_Click(object sender, RoutedEventArgs e)
         {
-            var studentName = StudentNameTextBox.Text?.Trim() ?? string.Empty;
-            var code = CodeTextBox.Text?.Trim() ?? string.Empty;
-            var week = (int)WeekNumberBox.Value;
-            var title = TitleTextBox.Text?.Trim() ?? string.Empty;
-            var grades = Grades.ToArray();
-            var average = grades.Length > 0 ? grades.Average() : (double?)null;
-            var subject = SubjectComboBox.SelectedItem as SubjectModel;
+            try
+            {
+                var subject = SubjectComboBox.SelectedItem as SubjectModel;
+                if (subject == null)
+                {
+                    return;
+                }
 
-            System.Diagnostics.Debug.WriteLine($"[Teacher] Code:{code} Student:{studentName} Week:{week} Title:{title} Subject:{subject?.Code} Avg:{average}");
-            // TODO: stuur naar API (use HttpClient) of sla lokaal op
+                var code = CodeTextBox.Text?.Trim();
+                var title = TitleTextBox.Text?.Trim();
+                var week = (int)WeekNumberBox.Value;
+                var grades = Grades.ToList();
+
+                if (string.IsNullOrWhiteSpace(code) || string.IsNullOrWhiteSpace(title))
+                {
+                    return;
+                }
+                
+                var testData = new
+                {
+                    code = code,
+                    title = title,
+                    week = week,
+                    subjectId = subject.Id
+                };
+
+                var testContent = new StringContent(
+                    JsonSerializer.Serialize(testData),
+                    Encoding.UTF8,
+                    "application/json"
+                );
+
+                var testResponse = await _httpClient.PostAsync(
+                    $"{BaseUrl}/tests" + getCode(),
+                    testContent
+                );
+
+                if (!testResponse.IsSuccessStatusCode)
+                {
+                    return;
+                }
+
+                var testJson = await testResponse.Content.ReadAsStringAsync();
+                var createdTest = JsonSerializer.Deserialize<TestData>(testJson);
+
+                if (createdTest == null)
+                {
+                    return;
+                }
+                
+                foreach (var grade in grades)
+                {
+                    var pointData = new
+                    {
+                        grade = grade,
+                        testId = createdTest.Id,
+                        userId = 1
+                    };
+
+                    var pointContent = new StringContent(
+                        JsonSerializer.Serialize(pointData),
+                        Encoding.UTF8,
+                        "application/json"
+                    );
+
+                    var pointResponse = await _httpClient.PostAsync(
+                        $"{BaseUrl}/points" + getCode(),
+                        pointContent
+                    );
+
+                    if (!pointResponse.IsSuccessStatusCode)
+                    {
+                        return;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                
+            }
+        }
+
+        private String getCode()
+        {
+            var code = Environment.GetEnvironmentVariable("AUTH_CODE") ?? "123";
+            return "?code=" + code;
         }
 
         private void ClearButton_Click(object sender, RoutedEventArgs e)
@@ -102,6 +186,26 @@ namespace Smartpoints_Interface
             public string Name { get; set; } = string.Empty;
             public string Display => string.IsNullOrEmpty(Name) ? Code : $"{Code} - {Name}";
             public override string ToString() => Display;
+        }
+
+        public class TestCreateDto
+        {
+            public string code { get; set; }
+            public int week { get; set; }
+            public string title { get; set; }
+            public int subjectId { get; set; }
+        }
+
+        public class PointCreateDto
+        {
+            public double grade { get; set; }
+            public int testId { get; set; }
+            public int userId { get; set; }
+        }
+
+        public class TestResponseDto
+        {
+            public int id { get; set; }
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using smartpoints_api;
+using Smartpoints_Api.Models;
 
 namespace Smartpoints_API.apiRequests;
 
@@ -10,6 +11,7 @@ public class TestRequest : ApiRequest
     {
         RegisterHandler(RequestType.GET, GetTest);
         RegisterHandler(RequestType.GET, GetAllTests);
+        RegisterHandler(RequestType.POST, CreateTest);
     }
     
     public (string url, Action<Dictionary<string,string>> handler) GetTest()
@@ -64,5 +66,51 @@ public class TestRequest : ApiRequest
         };
 
         return (GetUrl(), logic);
+    }
+    
+    public (string url, Action<Dictionary<string,string>> handler) CreateTest()
+    {
+        Action<Dictionary<string,string>> logic = (_) =>
+        {
+            var body = ReadJson<TestCreateDto>();
+
+            if (body == null)
+            {
+                sendResponse(400, "Invalid request body");
+                return;
+            }
+
+            if (body.week < 0 || body.week > 52)
+            {
+                sendResponse(400, "Week must be between 0 and 52");
+                return;
+            }
+
+            using var db = new AppDbContext();
+
+            var test = new Test
+            {
+                Code = body.code,
+                Week = body.week,
+                Title = body.title,
+                SubjectId = body.subjectId,
+            };
+
+            db.Tests.Add(test);
+            db.SaveChanges();
+
+            WriteJson(test);
+            sendResponse(201, "Created");
+        };
+
+        return (GetUrl(), logic);
+    }
+    
+    public class TestCreateDto
+    {
+        public string code { get; set; }
+        public int week { get; set; }
+        public string title { get; set; }
+        public int subjectId { get; set; }
     }
 }
